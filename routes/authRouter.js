@@ -2,9 +2,11 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
 const db = require('../db/db');
+const validate = require('../middleware/validateInfo');
+const authorization = require('../middleware/authorization');
 const tokenGenerator = require('../utils/token');
 
-router.post('/register', async (req, res, next) => {
+router.post('/register', validate, async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -28,11 +30,10 @@ router.post('/register', async (req, res, next) => {
     return res.status(201).json({ data: newUser.rows[0].user_email, message: 'Resource created successfully' });
   } catch (error) {
     res.status(500).json({ err: error, message: 'smth broke' });
-    next();
   }
 });
 
-router.post('/login', async (req, res, next) => {
+router.post('/login', validate, async (req, res) => {
   const { email, password } = req.body;
 
   const user = await db.query('select * from users where user_email = $1', [email]);
@@ -50,6 +51,16 @@ router.post('/login', async (req, res, next) => {
   const token = tokenGenerator(user.rows[0].user_id);
 
   return res.status(200).json({ message: 'Auth looks good', data: token });
+});
+
+// kind of dumb, but w/e
+// pretty sure about it
+router.get('/verify', authorization, async (req, res) => {
+  try {
+    return res.status(200).json({ isAuthenticated: true });
+  } catch (error) {
+    res.status(500).json({ err: error, message: 'smth broke' });
+  }
 });
 
 module.exports = router;
