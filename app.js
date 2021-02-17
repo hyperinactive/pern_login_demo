@@ -9,4 +9,9 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 
+const authRouter = require('./routes/auth');
+
+// auth routes
+app.use('/auth', authRouter);
+
 module.exports = app;
